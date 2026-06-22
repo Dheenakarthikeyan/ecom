@@ -1,0 +1,12 @@
+npm i express 
+npm init -y  
+ npm i nodemon -D  
+ npm i dotenv
+ .env sensitive data information store panna la ex: API Key DATAbase password json token
+ npm i mongoose
+ npm i validator
+ npm i bcryptjs
+ npm i jsonwebtoken
+npm i cookie-parser
+ npm i crypto
+ npm i nodemailer
