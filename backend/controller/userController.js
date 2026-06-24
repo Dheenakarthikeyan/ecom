@@ -215,7 +215,7 @@ export const resetPassword = async (req, res, next) => {
 
 ////UserSection
 export const profile = async(req,res,next)=>{
-    const user = await User.findById(req.User.id);
+    const user = await User.findById(req.user.id);
 
     res.status(200).json({
         success:true,
@@ -226,7 +226,7 @@ export const profile = async(req,res,next)=>{
 export const updatePassword = async(req,res,next)=>{
     const {oldPassword,newPassword,confirmpassword} = req.body;
 
-    const user = await User.findById(req.User.id).select("+password");
+    const user = await User.findById(req.user.id).select("+password");
 
     const isCorrect = await user.verifyPassword(oldPassword);
 
@@ -251,7 +251,7 @@ export const updateProfile = async(req,res,next) => {
 
     const updateUserDetails = {name,email};
 
-    const user = await User.findByIdAndUpdate(req.User.id,updateUserDetails,{new:true,runValidators:true});
+    const user = await User.findByIdAndUpdate(req.user.id,updateUserDetails,{new:true,runValidators:true});
     res.status(200).json({
         success:true,
         message:"Profile update Successfully",

@@ -16,7 +16,7 @@ router.route("/password/updateProfile").put(verifyUser,updateProfile)
 
 
 router.route("/admin/User").get(verifyUser,roleBasedAccess("admin"),getUser)
-router.route("/admin/User/:id").get(verifyUser,roleBasedAccess("admin"),getSingleUser).put(verifyUser,roleBasedAccess("admin")).put(verifyUser,roleBasedAccess("admin"),updateUserRole).delete(verifyUser,roleBasedAccess("admin"),deleteUser);
+router.route("/admin/User/:id").get(verifyUser,roleBasedAccess("admin"),getSingleUser).put(verifyUser,roleBasedAccess("admin"),updateUserRole).delete(verifyUser,roleBasedAccess("admin"),deleteUser);
 
 
 export default router;

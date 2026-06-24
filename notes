@@ -1,3 +1,4 @@
+BackendPackage
 npm i express 
 npm init -y  
  npm i nodemon -D  
@@ -10,3 +11,10 @@ npm init -y
 npm i cookie-parser
  npm i crypto
  npm i nodemailer
+
+ FrontendPackage
+ npm create vite@latest .
+ npm install tailwindcss @tailwindcss/vite
+ npm i react-router-dom
+ npm i react-hot-toast
+ npm i lucide-react

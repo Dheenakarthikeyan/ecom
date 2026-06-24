@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+/*import mongoose from "mongoose";
 
 const productScheme = new mongoose.Schema({
     name: {
@@ -27,10 +27,10 @@ const productScheme = new mongoose.Schema({
             url: { type: String, required: [true] }
         }
     ],
-    category: {
-        type: String,
-        required: [true, "please enter product category"]
-    },
+  category: {
+  type: String,
+  required: true
+},
     stock: {
         type: Number,
         required: [true, "please enter product Stock"],
@@ -40,12 +40,18 @@ const productScheme = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    review: [
-      
-        { name: { type: String, required: true } },
-        { rating: { type: Number, required: true } },
-        { comment: { type: String, required: true } },
-    ],
+    reviews: [
+  {
+    user: {
+      type: mongoose.Schema.ObjectId,
+      ref: "User",
+      required: true
+    },
+    name: String,
+    rating: Number,
+    comment: String
+  }
+],
     user: {
         type: mongoose.Schema.ObjectId,
         ref: "User",
@@ -59,3 +65,88 @@ const productScheme = new mongoose.Schema({
 
 export default mongoose.model("Product", productScheme);
 
+*/
+import mongoose from "mongoose";
+
+const productSchema = new mongoose.Schema(
+{
+    name: {
+        type: String,
+        required: [true, "Please enter product name"],
+        trim: true
+    },
+
+    description: {
+        type: String,
+        required: [true, "Please enter product description"]
+    },
+
+    price: {
+        type: Number,
+        required: [true, "Please enter product price"],
+        maxlength: [7, "Price cannot exceed 7 digits"]
+    },
+
+    rating: {
+        type: Number,
+        default: 0
+    },
+
+    images: [
+        {
+            public_id: {
+                type: String,
+                required: true
+            },
+            url: {
+                type: String,
+                required: true
+            }
+        }
+    ],
+
+    category: {
+        type: String,
+        required: [true, "Please enter product category"]
+    },
+
+    stock: {
+        type: Number,
+        required: [true, "Please enter product stock"],
+        default: 1
+    },
+
+    numOfReviews: {
+        type: Number,
+        default: 0
+    },
+
+    reviews: {
+        type: [
+            {
+                user: {
+                    type: mongoose.Schema.ObjectId,
+                    ref: "User",
+                    required: true
+                },
+                name: String,
+                rating: Number,
+                comment: String
+            }
+        ],
+        default: []   // 🔥 VERY IMPORTANT FIX
+    },
+
+    user: {
+        type: mongoose.Schema.ObjectId,
+        ref: "User",
+        required: true
+    }
+
+},
+{
+    timestamps: true
+}
+);
+
+export default mongoose.model("Product", productSchema);

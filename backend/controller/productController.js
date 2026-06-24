@@ -5,7 +5,7 @@ import APIHelper from "../helper/APIHelper.js";
 import HandleError from "../helper/hadleError.js";
 
 export const addProduct = async (req, res) => {
-    req.body.user =  req.User._id
+    req.body.user = req.user._id
 
     const product = await Product.create(req.body);
 
@@ -137,59 +137,160 @@ export const deleteProduct = async (req, res) => {
     }
 };
 
-
+//addPRoductReview
 export const createProductReview = async (req, res, next) => {
     try {
+        const { rating, comment, productId } = req.body;
+
+        // ✅ User check
         if (!req.user) {
             return next(new HandleError("User not authenticated", 401));
         }
 
-        const { rating, comment, productId } = req.body;
-
-        if (!rating || !productId) {
-            return next(new HandleError("Rating and Product ID required", 400));
+        // ✅ Rating validation
+        if (!rating || isNaN(rating)) {
+            return next(new HandleError("Valid rating required", 400));
         }
 
-        if (rating < 1 || rating > 5) {
-            return next(new HandleError("Rating must be between 1 and 5", 400));
-        }
-
+        // ✅ Find product
         const product = await Product.findById(productId);
 
         if (!product) {
-            return next(new HandleError("Product not found", 404));
+            return next(new HandleError("Product Not Found", 404));
         }
 
-        const reviewExist = product.reviews.find(
+        // ✅ IMPORTANT FIX (prevent undefined error)
+        if (!product.reviews) {
+            product.reviews = [];
+        }
+
+        const reviewData = {
+            user: req.user._id,
+            name: req.user.name,
+            rating: Number(rating),
+            comment
+        };
+
+        // ✅ Check existing review
+        const reviewExists = product.reviews.find(
             (rev) => rev.user.toString() === req.user._id.toString()
         );
 
-        if (reviewExist) {
-            reviewExist.rating = Number(rating);
-            reviewExist.comment = comment;
-        } else {
-            product.reviews.push({
-                user: req.user._id,
-                name: req.user.name,
-                rating: Number(rating),
-                comment
+        if (reviewExists) {
+            // 🔄 Update review
+            product.reviews.forEach((rev) => {
+                if (rev.user.toString() === req.user._id.toString()) {
+                    rev.rating = Number(rating);
+                    rev.comment = comment;
+                }
             });
+        } else {
+            // ➕ Add review
+            product.reviews.push(reviewData);
         }
 
+        // ✅ Update review count
         product.numOfReviews = product.reviews.length;
 
-        const sum = product.reviews.reduce((acc, rev) => acc + rev.rating, 0);
+        // ✅ Recalculate rating
+        let sum = 0;
+        product.reviews.forEach((rev) => {
+            sum += rev.rating;
+        });
 
-        product.rating = product.reviews.length ? sum / product.reviews.length : 0;
+        product.rating =
+            product.reviews.length > 0
+                ? sum / product.reviews.length
+                : 0;
 
+        // ✅ Save without validation issues
         await product.save({ validateBeforeSave: false });
 
         res.status(200).json({
             success: true,
-            message: "Review added/updated successfully",
+            product,
         });
 
     } catch (error) {
         next(error);
     }
 };
+
+//review view
+export const viewProductReview = async (req, res, next) => {
+    const product = await Product.findById(req.query.id);
+    if (!product) {
+        return next(new HandleError("Product not Found", 400));
+    }
+
+    res.status(200).json({
+        success: true,
+        reviews: product.reviews
+    })
+}
+
+
+
+//deleteReview check
+export const adminDeleteReview = async (req, res, next) => {
+  try {
+    const { productId, id } = req.query;
+
+    // 1. Check inputs
+    if (!productId || !id) {
+      return next(new HandleError("ProductId and ReviewId required", 400));
+    }
+
+    // 2. Find product
+    const product = await Product.findById(productId);
+
+    if (!product) {
+      return next(new HandleError("Product not found", 404));
+    }
+
+    // 3. Check review exists
+    const reviewExists = product.reviews.some(
+      (r) => r._id.toString() === id.toString()
+    );
+
+    if (!reviewExists) {
+      return next(new HandleError("Review not found", 404));
+    }
+
+    // 4. Delete review
+    const updatedReviews = product.reviews.filter(
+      (r) => r._id.toString() !== id.toString()
+    );
+
+    // 5. Recalculate rating
+    let sum = 0;
+    updatedReviews.forEach((r) => {
+      sum += r.rating;
+    });
+
+    product.reviews = updatedReviews;
+    product.numOfReviews = updatedReviews.length;
+    product.rating =
+      updatedReviews.length === 0 ? 0 : sum / updatedReviews.length;
+
+    // 🔥 IMPORTANT: use save (NOT findByIdAndUpdate)
+    await product.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Review Deleted Successfully",
+    });
+
+  } catch (error) {
+    console.log(error); // debug
+    next(error);
+  }
+};
+//allProductViewADMIN
+export const getAllproductByAdmin = async (req, res, next) => {
+    const products = await Product.find();
+    res.status(200).json({ success: true, products })
+}
+
+
+
