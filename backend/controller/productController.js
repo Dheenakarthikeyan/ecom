@@ -4,17 +4,28 @@ import ErrorHandler from "../helper/hadleError.js";
 import APIHelper from "../helper/APIHelper.js";
 import HandleError from "../helper/hadleError.js";
 
+
+
 export const addProduct = async (req, res) => {
-    req.body.user = req.user._id
+    try {
+        req.body.user = req.user._id;
 
-    const product = await Product.create(req.body);
+        // Check what is coming from the client
+        console.log("Request Body:", req.body);
 
-    res.status(201).json({
-        success: true,
-        product,
-    })
-}
+        const product = await Product.create(req.body);
 
+        res.status(201).json({
+            success: true,
+            product,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
 //get multiple product  http://localhost:6663/api/v1/products?keyword="samsung"
 //http://localhost:6663/api/v1/products?keyword=Laptopconsole.log(req.params.keyword);
 
@@ -137,7 +148,10 @@ export const deleteProduct = async (req, res) => {
     }
 };
 
-//addPRoductReview
+
+
+//ViewSection
+//addProductReview
 export const createProductReview = async (req, res, next) => {
     try {
         const { rating, comment, productId } = req.body;
@@ -167,6 +181,7 @@ export const createProductReview = async (req, res, next) => {
         const reviewData = {
             user: req.user._id,
             name: req.user.name,
+            avatar: req.user.avatar?.url || "",
             rating: Number(rating),
             comment
         };
@@ -233,59 +248,61 @@ export const viewProductReview = async (req, res, next) => {
 
 //deleteReview check
 export const adminDeleteReview = async (req, res, next) => {
-  try {
-    const { productId, id } = req.query;
+    try {
+        const { productId, id } = req.query;
 
-    // 1. Check inputs
-    if (!productId || !id) {
-      return next(new HandleError("ProductId and ReviewId required", 400));
+        // 1. Check inputs
+        if (!productId || !id) {
+            return next(new HandleError("ProductId and ReviewId required", 400));
+        }
+
+        // 2. Find product
+        const product = await Product.findById(productId);
+
+        if (!product) {
+            return next(new HandleError("Product not found", 404));
+        }
+
+        // 3. Check review exists
+        const reviewExists = product.reviews.some(
+            (r) => r._id.toString() === id.toString()
+        );
+
+        if (!reviewExists) {
+            return next(new HandleError("Review not found", 404));
+        }
+
+        // 4. Delete review
+        const updatedReviews = product.reviews.filter(
+            (r) => r._id.toString() !== id.toString()
+        );
+
+        // 5. Recalculate rating
+        let sum = 0;
+        updatedReviews.forEach((r) => {
+            sum += r.rating;
+        });
+
+        product.reviews = updatedReviews;
+        product.numOfReviews = updatedReviews.length;
+        product.rating =
+            updatedReviews.length === 0 ? 0 : sum / updatedReviews.length;
+
+        // 🔥 IMPORTANT: use save (NOT findByIdAndUpdate)
+        await product.save();
+
+        res.status(200).json({
+            success: true,
+            message: "Review Deleted Successfully",
+        });
+
+    } catch (error) {
+        console.log(error); // debug
+        next(error);
     }
-
-    // 2. Find product
-    const product = await Product.findById(productId);
-
-    if (!product) {
-      return next(new HandleError("Product not found", 404));
-    }
-
-    // 3. Check review exists
-    const reviewExists = product.reviews.some(
-      (r) => r._id.toString() === id.toString()
-    );
-
-    if (!reviewExists) {
-      return next(new HandleError("Review not found", 404));
-    }
-
-    // 4. Delete review
-    const updatedReviews = product.reviews.filter(
-      (r) => r._id.toString() !== id.toString()
-    );
-
-    // 5. Recalculate rating
-    let sum = 0;
-    updatedReviews.forEach((r) => {
-      sum += r.rating;
-    });
-
-    product.reviews = updatedReviews;
-    product.numOfReviews = updatedReviews.length;
-    product.rating =
-      updatedReviews.length === 0 ? 0 : sum / updatedReviews.length;
-
-    // 🔥 IMPORTANT: use save (NOT findByIdAndUpdate)
-    await product.save();
-
-    res.status(200).json({
-      success: true,
-      message: "Review Deleted Successfully",
-    });
-
-  } catch (error) {
-    console.log(error); // debug
-    next(error);
-  }
 };
+
+
 //allProductViewADMIN
 export const getAllproductByAdmin = async (req, res, next) => {
     const products = await Product.find();

@@ -1,9 +1,29 @@
 import { ShoppingBag, ShoppingCart } from 'lucide-react'
-import React from 'react'
-import { Link, NavLink } from 'react-router-dom'
-import { Search,User } from 'lucide-react'
+import React, { useState } from 'react'
+import { Link, NavLink, useNavigate, useSearchParams } from 'react-router-dom'
+import { Search, User, Menu, X } from 'lucide-react'
+
 
 const Navigation = () => {
+   const [searchQuery,setSearchQuery] = useState("");
+    const [open, setOpen] = useState(false)
+    const navigate = useNavigate();
+
+    const [searchParams] = useSearchParams();
+    const keyword = searchParams.get("keyword") || "";
+    const isAuthencation = false
+    const handleSearch =(e)=>{
+        e.preventDefault();
+        if(searchQuery.trim()){
+            navigate(`/products?keyword=${encodeURIComponent(searchQuery.trim())}`)
+
+        }else{
+            navigate("/products")
+        }
+        setSearchQuery("");
+
+    }
+
     return (
         <nav className='sticky top-0 w-full bg-white shadow-md z-50 '>
             <div className='max-w-6xl mx-auto px-4 h-16 flex items-center justify-between'>
@@ -17,106 +37,89 @@ const Navigation = () => {
                 {/* Menu */}
                 <div className='hidden md:flex items-center gap-8'>
 
-                    {/* Home */}
-                    <NavLink
-                        to="/"
-                        className={({ isActive }) =>
-                            `relative group transition ${isActive ? "text-blue-600 font-semibold" : "text-gray-700"
-                            }`
-                        }
-                    >
+                    <NavLink to="/" className={({ isActive }) =>
+                        `relative ${isActive ? "text-blue-600 font-semibold" : "text-gray-700"}`
+                    }>
                         Home
-                        <span className="absolute left-0 -bottom-1 h-0.5 bg-blue-600 w-0 group-hover:w-full transition-all duration-300"></span>
                     </NavLink>
 
-                    {/* Product */}
-                    <NavLink
-                        to="/products"
-                        className={({ isActive }) =>
-                            `relative group transition ${isActive ? "text-blue-600 font-semibold" : "text-gray-700"
-                            }`
-                        }
-                    >
+                    <NavLink to="/products" className={({ isActive }) =>
+                        `relative ${isActive ? "text-blue-600 font-semibold" : "text-gray-700"}`
+                    }>
                         Product
-                        <span className="absolute left-0 -bottom-1 h-0.5 bg-blue-600 w-0 group-hover:w-full transition-all duration-300"></span>
                     </NavLink>
 
-                    {/* About */}
-                    <NavLink
-                        to="/about"
-                        className={({ isActive }) =>
-                            `relative group transition ${isActive ? "text-blue-600 font-semibold" : "text-gray-700"
-                            }`
-                        }
-                    >
+                    <NavLink to="/about" className={({ isActive }) =>
+                        `relative ${isActive ? "text-blue-600 font-semibold" : "text-gray-700"}`
+                    }>
                         About Us
-                        <span className="absolute left-0 -bottom-1 h-0.5 bg-blue-600 w-0 group-hover:w-full transition-all duration-300"></span>
                     </NavLink>
 
-                    {/* Contact */}
-                    <NavLink
-                        to="/contact"
-                        className={({ isActive }) =>
-                            `relative group transition ${isActive ? "text-blue-600 font-semibold" : "text-gray-700"
-                            }`
-                        }
-                    >
+                    <NavLink to="/contact" className={({ isActive }) =>
+                        `relative ${isActive ? "text-blue-600 font-semibold" : "text-gray-700"}`
+                    }>
                         Contact Us
-                        <span className="absolute left-0 -bottom-1 h-0.5 bg-blue-600 w-0 group-hover:w-full transition-all duration-300"></span>
                     </NavLink>
 
                 </div>
 
-
-
-
-
                 <div className="flex items-center gap-4">
 
-                    {/* 🔍 Search */}
-                    <form className="hidden sm:flex items-center border border-slate-300 rounded-full overflow-hidden px-3 py-1 bg-white shadow-sm">
-
+                    {/* Search */}
+                    <form  onSubmit={ handleSearch} className="hidden sm:flex items-center border rounded-full px-3 py-1">
                         <input
                             type="text"
                             placeholder="Search Product"
                             className="outline-none px-2 py-1 w-40 md:w-56 text-sm"
+                            value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
                         />
-
-                        <button
-                            type="submit"
-                            className="p-2 rounded-full hover:bg-blue-100 transition duration-300"
-                        >
-                            <Search size={18} className="text-gray-600" />
+                        <button type="submit">
+                            <Search size={18} />
                         </button>
-
                     </form>
 
-                    {/* 🛒 Cart */}
-                    <Link
-                        to="/cart"
-                        className="relative text-gray-700 hover:text-blue-600 transition"
-                    >
+                    {/* Cart */}
+                    <Link to="/cart" className="relative text-gray-700">
                         <ShoppingCart size={22} />
-
-                        <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs font-semibold min-w-5 h-5 px-1 rounded-full flex items-center justify-center">
+                        <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                             1
                         </span>
                     </Link>
 
-                    {/* 👤 Register */}
-                    <Link
-                        to="/register"
-                        className="hidden sm:flex gap-2 items-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-                    >
-                        <User size={18} />
-                        Register
-                    </Link>
+                    {/* Register */}
+                    {!isAuthencation && (
+                        <Link
+                            to="/register"
+                            className="hidden sm:flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg"
+                        >
+                            <User size={18} />
+                            Register
+                        </Link>
+                    )}
+
+                    {/* Mobile button */}
+                    <button onClick={() => setOpen(!open)} className='md:hidden'>
+                        {open ? <X /> : <Menu />}
+                    </button>
 
                 </div>
             </div>
 
+            {/* Mobile Menu */}
+            <div className={`md:hidden overflow-hidden transition-all duration-300 ${open ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}`}>
 
-        </nav >
+                <div className='flex flex-col p-4 gap-4'>
+
+                    <Link onClick={() => setOpen(false)} to="/">Home</Link>
+                    <Link onClick={() => setOpen(false)} to="/products">Products</Link>
+                    <Link onClick={() => setOpen(false)} to="/about">About Us</Link>
+                    <Link onClick={() => setOpen(false)} to="/contact">Contact Us</Link>
+
+                </div>
+
+            </div>
+
+        </nav>
     )
 }
 

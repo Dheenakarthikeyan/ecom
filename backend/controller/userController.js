@@ -8,7 +8,7 @@ import crypto from "crypto"
 
 export const registerUser = async (req, res) => {
     try {
-        const { name, email, password } = req.body;
+        const { name, email, password,avatar } = req.body;
 
         // ✅ Check if email already exists
         const existingUser = await User.findOne({ email });
@@ -24,7 +24,11 @@ export const registerUser = async (req, res) => {
         const user = await User.create({
             name,
             email,
-            password
+            password,
+            avatar: {
+                public_id: avatar.public_id,
+                url: avatar.url
+            }
         });
 
         /*  // ✅ Generate token
@@ -83,7 +87,7 @@ export const loginUser = async (req, res, next) => {
 
 
     */
- 
+
 
     sendToken(user, 200, res)
 }
@@ -214,47 +218,48 @@ export const resetPassword = async (req, res, next) => {
 };
 
 ////UserSection
-export const profile = async(req,res,next)=>{
+export const profile = async (req, res, next) => {
     const user = await User.findById(req.user.id);
 
     res.status(200).json({
-        success:true,
+        success: true,
         user
-    })}
+    })
+}
 
 
-export const updatePassword = async(req,res,next)=>{
-    const {oldPassword,newPassword,confirmpassword} = req.body;
+export const updatePassword = async (req, res, next) => {
+    const { oldPassword, newPassword, confirmpassword } = req.body;
 
     const user = await User.findById(req.user.id).select("+password");
 
     const isCorrect = await user.verifyPassword(oldPassword);
 
-    if(!isCorrect){
-        return next(new HandleError("Incorrect old Password",400))
+    if (!isCorrect) {
+        return next(new HandleError("Incorrect old Password", 400))
     }
 
-    if(newPassword !== confirmpassword){
-        return next(new HandleError("Confirm password must be same as new password...",400))
+    if (newPassword !== confirmpassword) {
+        return next(new HandleError("Confirm password must be same as new password...", 400))
     }
 
     user.password = newPassword;
     await user.save();
 
-    
+
     sendToken(user, 200, res);
 }
 
 
-export const updateProfile = async(req,res,next) => {
-    const {name,email} =req.body;
+export const updateProfile = async (req, res, next) => {
+    const { name, email } = req.body;
 
-    const updateUserDetails = {name,email};
+    const updateUserDetails = { name, email };
 
-    const user = await User.findByIdAndUpdate(req.user.id,updateUserDetails,{new:true,runValidators:true});
+    const user = await User.findByIdAndUpdate(req.user.id, updateUserDetails, { new: true, runValidators: true });
     res.status(200).json({
-        success:true,
-        message:"Profile update Successfully",
+        success: true,
+        message: "Profile update Successfully",
         user
 
     })
@@ -263,62 +268,62 @@ export const updateProfile = async(req,res,next) => {
 }
 
 //adminSection
-export const getUser = async(req,res) => {
+export const getUser = async (req, res) => {
     const user = await User.find();
 
     res.status(200).json({
-        success:true,
+        success: true,
         user
     })
 }
 
 
-export const getSingleUser = async(req,res,next) =>{
+export const getSingleUser = async (req, res, next) => {
     const id = req.params.id;
     const user = await User.findById(id);
-    if(!user){
-        return next(new HandleError("User does not exist",400));
+    if (!user) {
+        return next(new HandleError("User does not exist", 400));
     }
 
     res.status(200).json({
-        success:true,
+        success: true,
         user
     })
 
 
 }
 
-export const updateUserRole = async(req,res,next) => {
-    const {role} = req.body;
+export const updateUserRole = async (req, res, next) => {
+    const { role } = req.body;
     const id = req.params.id;
-    const updateRole = {role};
-    const user = await User.findByIdAndUpdate(id,updateRole,{new:true});
-    if(!user){
-        return next(new HandleError("User does not exist :",400));
+    const updateRole = { role };
+    const user = await User.findByIdAndUpdate(id, updateRole, { new: true });
+    if (!user) {
+        return next(new HandleError("User does not exist :", 400));
     }
 
     res.status(200).json({
-        success:true,
+        success: true,
         user
     })
 }
 
-export const deleteUser = async(req,res,next) =>{
+export const deleteUser = async (req, res, next) => {
 
     const id = req.params.id;
 
     const user = await User.findById(id);
 
-    if(!user){
-        return next(new HandleError("User does not exit",400));
+    if (!user) {
+        return next(new HandleError("User does not exit", 400));
     }
 
     await User.findByIdAndDelete(user);
 
-     res.status(200).json({
-        success:true,
-        message:"User details Successfully Deleted "
+    res.status(200).json({
+        success: true,
+        message: "User details Successfully Deleted "
     })
-    
+
 
 }

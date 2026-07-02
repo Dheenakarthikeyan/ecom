@@ -25,7 +25,7 @@ export const verifyUser = async(req,res,next) => {
   
 }
 
-export const roleBasedAccess = (roles) => {
+export const roleBasedAccess = (...roles) => {
   return (req, res, next) => {
 
     console.log(req.user); // debug

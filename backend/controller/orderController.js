@@ -1,7 +1,7 @@
 import Order from "../model/orderModel.js";
 import HandleError from "../helper/hadleError.js";
 
-
+//neworderCreate
 export const createNewOrder = async (req, res) => {
   try {
     console.log("USER:", req?.user); // 🔥 debug
@@ -46,7 +46,7 @@ export const createNewOrder = async (req, res) => {
   }
 };
 
-//singleOrder details
+//singleOrder detailsonluadin see
 export const getOrderDetails = async (req, res,next) => {
   try {
     const order = await Order.findById(req.params.id)
@@ -74,26 +74,7 @@ export const getOrderDetails = async (req, res,next) => {
 };
 
 
-export const myOrders = async (req, res) => {
-  try {
-    const orders = await Order.find({ user: req.user._id })
-      .populate("orderItems.product", "name price image");
-
-    res.status(200).json({
-      success: true,
-      orders
-    });
-
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-  }
-};
-
-
-//admin
+//adminGetAllOrderDetails
 export const getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find()
@@ -123,7 +104,23 @@ export const getAllOrders = async (req, res) => {
   }
 };
 
+export const myOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({ user: req.user._id })
+      .populate("orderItems.product", "name price image");
 
+    res.status(200).json({
+      success: true,
+      orders
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
 
 
 
@@ -171,15 +168,15 @@ export const updateOrderStatus = async (req, res, next) => {
     }
 
     // already delivered check
-    if (order.orderStatus === "Delivered") {
+    if (order.status === "Delivered") {
       return next(
         new HandleError("This order is already delivered", 400)
       );
     }
 
     // update stock only if moving to Delivered
-    if (req.body.status === "Delivered") {
-      await Promise.all(
+    if (req.body.orderStatus === "Delivered") {
+      await Promise.all(//allrequestUpdate
         order.orderItems.map((item) =>
           updateQuantity(item.product, item.quantity)
         )
